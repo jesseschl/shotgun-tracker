@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 import os
 from functools import wraps
 from dotenv import load_dotenv
-import psycopg2
-from psycopg2.extras import RealDictCursor
+import psycopg
+from psycopg.rows import dict_row
 
 load_dotenv()
 
@@ -15,7 +15,7 @@ DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://postgres:password@lo
 
 # Initialize database
 def init_db():
-    conn = psycopg2.connect(DATABASE_URL)
+    conn = psycopg.connect(DATABASE_URL)
     c = conn.cursor()
     
     # Create tables if they don't exist
@@ -53,8 +53,7 @@ def init_db():
     conn.close()
 
 def get_db_connection():
-    conn = psycopg2.connect(DATABASE_URL)
-    conn.cursor_factory = RealDictCursor
+    conn = psycopg.connect(DATABASE_URL, row_factory=dict_row)
     return conn
 
 # Authentication decorator
@@ -241,7 +240,12 @@ def pay_off_shot(user_id):
     return jsonify({'error': 'User not found'}), 404
 
 if __name__ == '__main__':
-    init_db()
+    try:
+        init_db()
+    except Exception as e:
+        print(f"Warning: Could not initialize database: {e}")
+        print("Continuing without database. Login will not work until connected to PostgreSQL.")
+    
     debug_mode = os.environ.get('DEBUG', 'False').lower() == 'true'
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=debug_mode, port=port)

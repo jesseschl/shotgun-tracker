@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: shotgun-tracker
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+    envVars:
+      - key: DATABASE_URL
+        scope: run
+      - key: SECRET_KEY
+        scope: run
+      - key: USERS_JSON
+        scope: run
